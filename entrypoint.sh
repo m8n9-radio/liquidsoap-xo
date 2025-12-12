@@ -1,6 +1,54 @@
 #!/bin/bash
 set -e
 
+# ========================================
+# Default values (matching .env.dist)
+# ========================================
+
+# Icecast Server Configuration
+export ICECAST_HOST=${ICECAST_HOST:-icecast}
+export ICECAST_PORT=${ICECAST_PORT:-8000}
+export ICECAST_PASSWORD=${ICECAST_PASSWORD:-hackme}
+export ICECAST_MOUNT=${ICECAST_MOUNT:-stream}
+
+# Radio Station Information
+export RADIO_NAME=${RADIO_NAME:-Radio Dream}
+export RADIO_DESCRIPTION=${RADIO_DESCRIPTION:-Radio Dream Stream}
+export RADIO_GENRE=${RADIO_GENRE:-Various}
+export RADIO_URL=${RADIO_URL:-http://localhost:8000}
+
+# Harbor (Live Input) Configuration
+export HARBOR_ENABLED=${HARBOR_ENABLED:-true}
+export HARBOR_PORT=${HARBOR_PORT:-8001}
+export HARBOR_PASSWORD=${HARBOR_PASSWORD:-hackme}
+export HARBOR_USER=${HARBOR_USER:-source}
+
+# Telnet Server Configuration
+export TELNET_ENABLED=${TELNET_ENABLED:-true}
+export TELNET_PORT=${TELNET_PORT:-1234}
+
+# Logging Configuration
+export LOG_LEVEL=${LOG_LEVEL:-4}
+
+# Discogs API Configuration
+export DISCOGS_ENABLED=${DISCOGS_ENABLED:-false}
+export DISCOGS_TOKEN=${DISCOGS_TOKEN:-}
+export DISCOGS_CACHE_MAX_SIZE=${DISCOGS_CACHE_MAX_SIZE:-10000}
+
+# Telegram Notifications
+export TELEGRAM_ENABLED=${TELEGRAM_ENABLED:-false}
+export TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+export TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
+
+# Stream Encoding Configuration
+export STREAM_FORMAT=${STREAM_FORMAT:-mp3}
+export STREAM_BITRATE=${STREAM_BITRATE:-320}
+export STREAM_SAMPLERATE=${STREAM_SAMPLERATE:-44100}
+
+# Audio Configuration
+export AUDIO_SAMPLERATE=${AUDIO_SAMPLERATE:-44100}
+export AUDIO_CHANNELS=${AUDIO_CHANNELS:-2}
+
 echo "========================================="
 echo "Liquidsoap Radio - Starting..."
 echo "========================================="
@@ -52,12 +100,18 @@ fi
 # Display configuration
 echo ""
 echo "Configuration:"
-echo "  Stream Format: ${STREAM_FORMAT:-mp3}"
-echo "  Bitrate: ${STREAM_BITRATE:-320} kbps"
-echo "  Samplerate: ${STREAM_SAMPLERATE:-44100} Hz"
-echo "  Icecast: ${ICECAST_HOST:-icecast}:${ICECAST_PORT:-8000}"
-echo "  Mount: /${ICECAST_MOUNT:-stream}"
-echo "  Discogs API: ${DISCOGS_ENABLED:-false}"
+echo "  Icecast Server: ${ICECAST_HOST}:${ICECAST_PORT}"
+echo "  Mount Point: /${ICECAST_MOUNT}"
+echo "  Stream Format: ${STREAM_FORMAT} @ ${STREAM_BITRATE} kbps / ${STREAM_SAMPLERATE} Hz"
+echo "  Radio Name: ${RADIO_NAME}"
+echo "  Genre: ${RADIO_GENRE}"
+echo ""
+echo "Features:"
+echo "  Harbor (Live Input): ${HARBOR_ENABLED} (port ${HARBOR_PORT})"
+echo "  Telnet Control: ${TELNET_ENABLED} (port ${TELNET_PORT})"
+echo "  Discogs API: ${DISCOGS_ENABLED}"
+echo "  Telegram Notifications: ${TELEGRAM_ENABLED}"
+echo "  Log Level: ${LOG_LEVEL}"
 echo ""
 
 # Display playlist summary
