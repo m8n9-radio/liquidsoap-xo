@@ -82,15 +82,17 @@ def get_discogs_cover(artist, title, album) =
 
         if cover != "" and cover != "null" then
           log("Discogs: Found cover for #{artist} - #{title}")
-          
+
           cache_size = list.length(cache)
-          if cache_size >= discogs_cache_max_size then
+          updated_cache = if cache_size >= discogs_cache_max_size then
             log("Discogs: Cache limit reached, removing oldest")
-            cache = list.tl(cache)
+            list.tl(cache)
+          else
+            cache
           end
-          
-          discogs_cache := list.add((cache_key, cover), cache)
-          
+
+          discogs_cache := list.add((cache_key, cover), updated_cache)
+
           if cache_size mod 100 == 0 and cache_size > 0 then
             log("Discogs: Cache stats - #{cache_size} entries")
           end
@@ -98,16 +100,17 @@ def get_discogs_cover(artist, title, album) =
           cover
         else
           log("Discogs: No cover found for #{artist} - #{title}")
-          
+
           msg = "<b>🎵 No Cover</b>\n\n<b>Artist:</b> #{artist}\n<b>Title:</b> #{title}\n<b>Album:</b> #{album}"
           send_telegram(msg)
-          
-          cache_size = list.length(cache)
-          if cache_size >= discogs_cache_max_size then
-            cache = list.tl(cache)
+
+          updated_cache = if list.length(cache) >= discogs_cache_max_size then
+            list.tl(cache)
+          else
+            cache
           end
-          
-          discogs_cache := list.add((cache_key, ""), cache)
+
+          discogs_cache := list.add((cache_key, ""), updated_cache)
           ""
         end
       catch err do
@@ -126,7 +129,9 @@ def process_metadata(m) =
 
   if artist == "" or title == "" then
     log("WARNING: Missing metadata")
-    msg = "<b>⚠️ Missing Metadata</b>\n\n<b>File:</b> #{filename}\n<b>Artist:</b> #{if artist == "" then \"MISSING\" else artist end}\n<b>Title:</b> #{if title == "" then \"MISSING\" else title end}"
+    artist_display = if artist == "" then "MISSING" else artist end
+    title_display = if title == "" then "MISSING" else title end
+    msg = "<b>⚠️ Missing Metadata</b>\n\n<b>File:</b> #{filename}\n<b>Artist:</b> #{artist_display}\n<b>Title:</b> #{title_display}"
     send_telegram(msg)
   end
 
