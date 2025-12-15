@@ -484,7 +484,3 @@ LOG_LEVEL=5  # Maxim: debug complet
 - [Liquidsoap Documentation](https://www.liquidsoap.info/doc.html)
 - [Icecast Documentation](https://icecast.org/docs/)
 - [Discogs API](https://www.discogs.com/developers)
-
-## 📝 License
-
-MIT
