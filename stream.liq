@@ -132,13 +132,8 @@ def process_metadata(m) =
     send_telegram(msg)
   end
 
-  stream_title = if artist != "" and title != "" then
-    "#{artist} - #{title}"
-  elsif title != "" then
-    title
-  else
-    radio_name
-  end
+  # Keep title as-is, Liquidsoap will combine artist-title for song metadata
+  stream_title = if title != "" then title else radio_name end
 
   stream_url = if artist != "" and (title != "" or album != "") then
     cover = get_discogs_cover(artist, title, album)
@@ -150,6 +145,7 @@ def process_metadata(m) =
   log("Metadata: title=#{stream_title}, url=#{stream_url}")
 
   [
+    ("artist", artist),
     ("title", stream_title),
     ("url", stream_url)
   ]
