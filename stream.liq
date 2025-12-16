@@ -36,6 +36,9 @@ telegram_enabled = bool_of_string(environment.get("TELEGRAM_ENABLED"))
 telegram_bot_token = environment.get("TELEGRAM_BOT_TOKEN")
 telegram_chat_id = environment.get("TELEGRAM_CHAT_ID")
 
+backend_enabled = bool_of_string(environment.get("BACKEND_ENABLED"))
+backend_dns = environment.get("BACKEND_DNS")
+
 discogs_cache = ref([])
 
 def send_telegram(msg) =
@@ -53,6 +56,34 @@ def send_telegram(msg) =
     end
   end
 end
+
+def send_to_backend(artist, title, album, cover, filename) =
+  if backend_enabled and backend_dns != "" then
+    try
+      # Calculate MD5 hash from filename
+      md5_cmd = "echo -n '#{filename}' | md5sum | cut -d' ' -f1"
+      md5sum = string.trim(list.hd(default="", process.read.lines(md5_cmd)))
+
+      # Build track title as "Artist - Title"
+      track_title = "#{artist} - #{title}"
+
+      # Build backend URL
+      backend_url = "http://#{backend_dns}/tracks"
+
+      # Build JSON payload - escape quotes properly
+      json_data = '{"Md5":"' ^ md5sum ^ '","StreamTitle":"' ^ track_title ^ '","StreamUrl":"' ^ cover ^ '"}'
+
+      # Send POST request with JSON
+      cmd = "curl -s -X POST '#{backend_url}' -H 'Content-Type: application/json' -d '#{json_data}' >/dev/null 2>&1"
+      ignore(process.run(cmd))
+
+      log("Backend: Sent track #{artist} - #{title} (md5: #{md5sum})")
+    catch e do
+      log("Backend: Error - #{e}")
+    end
+  end
+end
+
 
 def get_discogs_cover(artist, title, album) =
   if not discogs_enabled or discogs_token == "" then
@@ -135,12 +166,17 @@ def process_metadata(m) =
   # Keep title as-is, Liquidsoap will combine artist-title for song metadata
   stream_title = if title != "" then title else radio_name end
 
-  stream_url = if artist != "" and (title != "" or album != "") then
-    cover = get_discogs_cover(artist, title, album)
-    if cover != "" then cover else radio_url end
+  # Get cover from Discogs (or empty string if disabled/not found)
+  cover = if artist != "" and (title != "" or album != "") then
+    get_discogs_cover(artist, title, album)
   else
-    radio_url
+    ""
   end
+
+  # Send track data to backend (with or without cover)
+  send_to_backend(artist, title, album, cover, filename)
+
+  stream_url = if cover != "" then cover else radio_url end
 
   log("Metadata: title=#{stream_title}, url=#{stream_url}")
 

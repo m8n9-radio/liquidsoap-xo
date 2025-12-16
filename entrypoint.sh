@@ -40,6 +40,10 @@ export TELEGRAM_ENABLED=${TELEGRAM_ENABLED:-false}
 export TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
 export TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
 
+# Backend API Configuration
+export BACKEND_ENABLED=${BACKEND_ENABLED:-false}
+export BACKEND_DNS=${BACKEND_DNS:-}
+
 # Stream Encoding Configuration
 export STREAM_FORMAT=${STREAM_FORMAT:-mp3}
 export STREAM_BITRATE=${STREAM_BITRATE:-320}
@@ -111,6 +115,7 @@ echo "  Harbor (Live Input): ${HARBOR_ENABLED} (port ${HARBOR_PORT})"
 echo "  Telnet Control: ${TELNET_ENABLED} (port ${TELNET_PORT})"
 echo "  Discogs API: ${DISCOGS_ENABLED}"
 echo "  Telegram Notifications: ${TELEGRAM_ENABLED}"
+echo "  Backend API: ${BACKEND_ENABLED} (${BACKEND_DNS})"
 echo "  Log Level: ${LOG_LEVEL}"
 echo ""
 
