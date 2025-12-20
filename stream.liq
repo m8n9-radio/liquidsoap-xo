@@ -57,13 +57,9 @@ def send_telegram(msg) =
   end
 end
 
-def send_to_backend(artist, title, album, cover, filename) =
+def send_to_backend(artist, title, cover, md5sum) =
   if backend_enabled and backend_dns != "" then
     try
-      # Calculate MD5 hash from filename
-      md5_cmd = "echo -n '#{filename}' | md5sum | cut -d' ' -f1"
-      md5sum = string.trim(list.hd(default="", process.read.lines(md5_cmd)))
-
       # Build track title as "Artist - Title"
       track_title = "#{artist} - #{title}"
 
@@ -163,9 +159,6 @@ def process_metadata(m) =
     send_telegram(msg)
   end
 
-  # Keep title as-is, Liquidsoap will combine artist-title for song metadata
-  stream_title = if title != "" then title else radio_name end
-
   # Get cover from Discogs (or empty string if disabled/not found)
   cover = if artist != "" and (title != "" or album != "") then
     get_discogs_cover(artist, title, album)
@@ -173,15 +166,39 @@ def process_metadata(m) =
     ""
   end
 
-  # Send track data to backend (with or without cover)
-  send_to_backend(artist, title, album, cover, filename)
+  # Calculate MD5 hash from filename for unique ID
+  md5sum = try
+    md5_cmd = "echo -n '#{filename}' | md5sum | cut -d' ' -f1"
+    string.trim(list.hd(default="", process.read.lines(md5_cmd)))
+  catch e do
+    log("MD5: Error calculating - #{e}")
+    ""
+  end
+
+  # Send track data to backend (with md5sum, cover)
+  send_to_backend(artist, title, cover, md5sum)
+
+  # Build stream_title with md5sum for Icecast
+  base_title = if artist != "" and title != "" then
+    "#{artist} - #{title}"
+  elsif title != "" then
+    title
+  else
+    radio_name
+  end
+
+  stream_title = if md5sum != "" then
+    "#{base_title} [#{md5sum}]"
+  else
+    base_title
+  end
 
   stream_url = if cover != "" then cover else radio_url end
 
   log("Metadata: title=#{stream_title}, url=#{stream_url}")
 
   [
-    ("artist", artist),
+    ("artist", ""),
     ("title", stream_title),
     ("url", stream_url)
   ]
@@ -206,8 +223,8 @@ jingles = mksafe(jingles)
 jingles = blank.skip(max_blank=5.0, min_noise=0.01, jingles)
 jingles = normalize(jingles)
 jingles = compress(jingles)
-jingles = metadata.map(update=false, fun(m) -> begin
-  [("title", "Jingle"), ("artist", "")]
+jingles = metadata.map(update=false, fun(_) -> begin
+  [("title", "Jingle - Thanks for listening"), ("artist", "")]
 end, jingles)
 
 music = rotate(
